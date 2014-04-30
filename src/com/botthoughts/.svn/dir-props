@@ -1,0 +1,9 @@
+K 10
+svn:ignore
+V 106
+.SerialPanel.form.swp
+.SerialPanel.java.swp
+.AuthenticationDialog.java.swp
+.AuthenticationDialog.form.swp
+
+END

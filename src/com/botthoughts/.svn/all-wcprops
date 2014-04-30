@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/8/trunk/src/com/botthoughts
+END
+JFileFilter.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/3/trunk/src/com/botthoughts/JFileFilter.java
+END
+SerialPanel.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/2/trunk/src/com/botthoughts/SerialPanel.java
+END
+AuthenticationDialog.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/5/trunk/src/com/botthoughts/AuthenticationDialog.java
+END
+ProjectHostingWriter.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/5/trunk/src/com/botthoughts/ProjectHostingWriter.java
+END
+PlatformUtilities.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/4/trunk/src/com/botthoughts/PlatformUtilities.java
+END
+SerialPanel.form
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/2/trunk/src/com/botthoughts/SerialPanel.form
+END
+AuthenticationDialog.form
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/5/trunk/src/com/botthoughts/AuthenticationDialog.form
+END
+ProjectHostingClient.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/!svn/ver/5/trunk/src/com/botthoughts/ProjectHostingClient.java
+END
+Debug.java
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2/trunk/src/com/botthoughts/Debug.java
+END
+JOptionPane.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/4/trunk/src/com/botthoughts/JOptionPane.java
+END
+UpdateChecker.java
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/7/trunk/src/com/botthoughts/UpdateChecker.java
+END
+JFileChooser.java
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/8/trunk/src/com/botthoughts/JFileChooser.java
+END
+Parser.java
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2/trunk/src/com/botthoughts/Parser.java
+END

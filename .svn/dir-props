@@ -1,0 +1,9 @@
+K 10
+svn:ignore
+V 37
+build
+dist
+.gitignore.swp
+.gitignore
+
+END

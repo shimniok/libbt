@@ -1,0 +1,71 @@
+10
+
+dir
+8
+https://com-botthoughts-java.googlecode.com/svn/trunk
+https://com-botthoughts-java.googlecode.com/svn
+
+
+
+2012-11-02T03:18:29.446075Z
+8
+shimniok@gmail.com
+has-props
+has-prop-mods
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+72df990a-1993-855e-5541-2f72d144d05b
+
+build.xml
+file
+
+
+
+
+2012-10-25T14:02:52.640125Z
+170cc19cbb3ed9244783ec3e12a0ffd1
+2012-10-31T18:57:38.985408Z
+2
+shimniok@gmail.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3710
+
+lib
+dir
+
+nbproject
+dir
+
+src
+dir
+
