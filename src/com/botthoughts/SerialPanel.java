@@ -5,14 +5,13 @@
 
 package com.botthoughts;
 
-import gnu.io.*;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.TooManyListenersException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
 
 /**
  *
@@ -29,66 +28,79 @@ public class SerialPanel extends javax.swing.JPanel implements SerialPortEventLi
         //getPorts();
     }
     
-    private void connect ( String portName ) throws Exception {
-        //make sure port is not currently in use
-        portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
-        if ( portIdentifier.isCurrentlyOwned() ) {
-            System.out.println("Error: Port is currently in use");
-        } else {
-            //create CommPort and identify available serial/parallel ports
-            commPort = portIdentifier.open(this.getClass().getName(),2000);
-            serialPort = (SerialPort) commPort;//cast all to serial
-            //set baudrate, 8N1 stopbits, no parity
-            serialPort.setSerialPortParams(baudRate, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-            //start I/O streams
-            inputStream = serialPort.getInputStream();
-            outputStream = serialPort.getOutputStream();
-            open=true;        
+    private boolean isOpen() {
+        return (serialPort != null);
+    }
+    
+    private void disconnect() throws SerialPortException {
+        //close serial port
+        System.out.println("closing serial port.");
+        if (serialPort != null) {
+            try {
+                serialPort.removeEventListener();
+                serialPort.closePort();
+                serialPort = null;
+                System.out.println("closed serial port.");
+            } catch (SerialPortException ex) {
+                System.out.println("error "+ex.getMessage());
+                Logger.getLogger(SerialPanel.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    
+    private void connect(String portName) throws SerialPortException {
+        // TODO: make sure port is not currently in use
+        if (serialPort == null) {
+            serialPort = new SerialPort(portName);
+            try {
+                serialPort.openPort();//Open serial port
+                serialPort.setParams(baudRate, 
+                                     SerialPort.DATABITS_8,
+                                     SerialPort.STOPBITS_1,
+                                     SerialPort.PARITY_NONE);//Set params. Also you can set params by this string: serialPort.setParams(9600, 8, 1, 0);
+                serialPort.setEventsMask(SerialPort.MASK_RXCHAR);
+                serialPort.addEventListener(this);
+            }
+            catch (SerialPortException e) {
+                System.out.println("Exception opening port: "+e.getMessage());
+            }
         }
     }
     
     private void setBaud() {
         String newbaud = baudBox.getSelectedItem().toString();//get text from user
         //do simple check to make sure baudrate is valid
-        baudRate=Integer.valueOf(newbaud).intValue();
+        baudRate=Integer.parseInt(newbaud);
     }
     
     
     /**
      * Gets a list of available serial ports and sticks those in the portBox JComboBox model
      */
-    private void getPorts() {
-        Enumeration portEnum = CommPortIdentifier.getPortIdentifiers();
-        portBox.removeAllItems();
-        while ( portEnum.hasMoreElements() ) {
-            portIdentifier = (CommPortIdentifier) portEnum.nextElement();
-            if (portIdentifier.getPortType() == CommPortIdentifier.PORT_SERIAL) {
-                portBox.addItem(portIdentifier.getName());
-                System.out.println(portIdentifier.getName());
-            }
-        }
+    private String[] getPorts() {
+        String[] myPortName = SerialPortList.getPortNames();
+
+        return myPortName;
     }
     
     /**
      * when data is received from serial port, display the data on the terminal
+     * 
+     * @param event is the event passed into this handler
      */
     @Override
     public void serialEvent(SerialPortEvent event) {
-        if (event.getEventType() == SerialPortEvent.DATA_AVAILABLE) {
-            byte[] buffer = new byte[MAX_DATA]; // create a buffer (enlarge if buffer overflow occurs)
-            int numBytes;                       // how many bytes read (smaller than buffer)
-            String s = "";
+        if (event.isRXCHAR()) {
+            String buffer;
 
             try {
-                numBytes = inputStream.read(buffer);
-                s += new String(buffer).substring(0, numBytes);
-//                System.out.println("bytes " + Integer.toString(numBytes));
-            } catch (IOException ex) {
+                buffer = serialPort.readString();
+                if (myParser != null)
+                    myParser.parseData(buffer);
+            } catch (SerialPortException ex) {
+                System.out.println("Error reading serial port "+ex.getMessage());
                 Logger.getLogger(SerialPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-            if (myParser != null) {
-                myParser.parseData(s);
             }
         }
     }
@@ -99,27 +111,10 @@ public class SerialPanel extends javax.swing.JPanel implements SerialPortEventLi
     
     /* call this from the main JFrame when it is closing, ensures disconnect of serial stuff */
     public void handleClose() {
-            //when user closes, make sure to close open ports and open I/O streams
-        if (portIdentifier != null && portIdentifier.isCurrentlyOwned()) { 
-            try {
-                //if port open, close port
-                if (portToggle != null) {
-                    portToggle.setText("Open Port");
-                }
-                if (inputStream != null) { //close input stream
-                    inputStream.close();
-                }
-                if (outputStream != null) { //close output stream
-                    outputStream.close();
-                }
-                if (serialPort != null) {
-                    serialPort.removeEventListener();
-                    serialPort.close();
-                }
-                open=false; 
-            } catch (IOException ex) {
-                Logger.getLogger(SerialPanel.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        try {
+            disconnect();
+        } catch (SerialPortException ex) {
+            Logger.getLogger(SerialPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
     }        
     
@@ -204,76 +199,41 @@ public class SerialPanel extends javax.swing.JPanel implements SerialPortEventLi
     }//GEN-LAST:event_baudBoxActionPerformed
 
     private void portBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portBoxActionPerformed
-        portName = (String)portBox.getSelectedItem();
-        portToggle.setEnabled( portBox.getSelectedIndex() >= 0);
+        portName = (String) portBox.getSelectedItem();
+        portToggle.setEnabled( portBox.getSelectedIndex() > 0);
     }//GEN-LAST:event_portBoxActionPerformed
 
     private void portBoxPopupMenuWillBecomeVisible(javax.swing.event.PopupMenuEvent evt) {//GEN-FIRST:event_portBoxPopupMenuWillBecomeVisible
-        getPorts(); // update the list of com ports dynamically
+        String[] portList = getPorts(); // update the list of com ports dynamically
+        portBox.removeAllItems();
+        portBox.addItem("Select Port");
+        for (String p : portList) {
+            portBox.addItem(p);
+            System.out.println(p);
+        }
     }//GEN-LAST:event_portBoxPopupMenuWillBecomeVisible
 
     private void portToggleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portToggleActionPerformed
-        //only open valid port. portList[0]="select port" - not a valid port
-        //if ((String)portBox.getSelectedItem() == portList[0]) {
-        if (portBox.getSelectedIndex() < 0) {//.getSelectedItem().equals(portList[0])) {
-            portToggle.setSelected(open);
-            //JOptionPane.showMessageDialog(this, "Must Select Valid Port.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        //if port open, close port & I/O streams
-        else if (portIdentifier.isCurrentlyOwned()) { 
-            portToggle.setText("Connect");
-            portBox.setEnabled(true);
-            baudBox.setEnabled(true);
-            //close input stream
-            if (inputStream != null) {
-                try { inputStream.close();
-                } catch (IOException ex) {
-                    System.out.println("error "+ex.getMessage());
-                }
-            }
-            //close output stream
-            if (outputStream != null) {
-                try { outputStream.close();
-                } catch (IOException ex) {
-                    System.out.println("error "+ex.getMessage());
-                }
-            }
-            //close serial port
-            System.out.println("closing serial port.");
-            serialPort.removeEventListener();
-            if (serialPort != null) {
-                serialPort.close();
-            }
-            System.out.println("closed serial port.");
-
-            open=false;
-        } else {//else port is closed, so open it
-            portToggle.setText("Disconnect");
-            portBox.setEnabled(false);
-            baudBox.setEnabled(false);
-            try {
+        try {
+            if (isOpen()) {
+                disconnect();
+                portToggle.setText("Connect");
+                portBox.setEnabled(true);
+                baudBox.setEnabled(true);
+            } else {
                 connect(portName);
+                portToggle.setText("Disconnect");
+                portBox.setEnabled(false);
+                baudBox.setEnabled(false);        
             }
-            catch ( Exception e ) {
-                System.out.println("error "+e.getMessage());
-            }
-            try {
-                serialPort.addEventListener(this);
-            } catch (TooManyListenersException ex) {
-                System.out.println("error "+ex.getMessage());
-            }
-            serialPort.notifyOnDataAvailable(true);
+        } catch ( SerialPortException e ) {
+            System.out.println("error "+e.getMessage());
         }
         System.out.println("end of toggle function");
     }//GEN-LAST:event_portToggleActionPerformed
 
-    static int MAX_DATA = 1024;
     private String portName;
-    private CommPort commPort;
     private SerialPort serialPort;
-    private CommPortIdentifier portIdentifier = null;
-    private InputStream inputStream;
-    private OutputStream outputStream;
     private int baudRate=115200;
     private boolean open=false;
     private Parser myParser;
